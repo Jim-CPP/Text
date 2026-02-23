@@ -1,33 +1,33 @@
-// Template.cpp
+// Text.cpp
 
-#include "Template.h"
+#include "Text.h"
 
 #include <windows.h>
 
 // Global variables
-static ListBoxWindow g_listBoxWindow;
+static RichEditWindow g_richEditWindow;
 static StatusBarWindow g_statusBarWindow;
 
-BOOL ListBoxWindowSelectionChangeFunction( LPCTSTR lpszSelectedItemText )
+BOOL RichEditWindowSelectionChangeFunction( LPCTSTR lpszSelectedItemText )
 {
 	// Show selected item text on status bar window
 	return g_statusBarWindow.SetText( lpszSelectedItemText );
 
-} // End of function ListBoxWindowSelectionChangeFunction
+} // End of function RichEditWindowSelectionChangeFunction
 
-BOOL ListBoxWindowDoubleClickFunction( LPCTSTR lpszSelectedItemText )
+BOOL RichEditWindowDoubleClickFunction( LPCTSTR lpszSelectedItemText )
 {
 	// Display selected item text
 	MessageBox( NULL, lpszSelectedItemText, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
 
 	return TRUE;
 
-} // End of function ListBoxWindowDoubleClickFunction
+} // End of function RichEditWindowDoubleClickFunction
 
 BOOL ArgumentFunction( LPCTSTR lpszArgument )
 {
-	// Add argument to list box window
-	g_listBoxWindow.AddString( lpszArgument );
+	// Display argument
+	MessageBox( NULL, lpszArgument, "Argument", ( MB_OK | MB_ICONINFORMATION ) );
 
 	return TRUE;
 
@@ -35,8 +35,8 @@ BOOL ArgumentFunction( LPCTSTR lpszArgument )
 
 BOOL DropFunction( LPCTSTR lpszFilePath )
 {
-	// Add file to list box window
-	g_listBoxWindow.AddString( lpszFilePath );
+	// Display file path
+	MessageBox( NULL, lpszFilePath, "Dropped", ( MB_OK | MB_ICONINFORMATION ) );
 
 	return TRUE;
 
@@ -78,33 +78,39 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		{
 			// A create message
 			HINSTANCE hInstance;
-			Font font;
 
 			// Get instance
 			hInstance = ( ( LPCREATESTRUCT )lParam )->hInstance;
 
-			// Get font
-			font.Get( DEFAULT_GUI_FONT );
-
-			// Create list box window
-			if( g_listBoxWindow.Create( hWndMain, hInstance, LIST_BOX_WINDOW_CLASS_DEFAULT_TEXT ) )
+			// Create rich edit window
+			if( g_richEditWindow.Create( hWndMain, hInstance, RICH_EDIT_WINDOW_CLASS_DEFAULT_TEXT ) )
 			{
-				// Successfully created list box window
+				// Successfully created rich edit window
+				Font font;
 
-				// Set list box window font
-				g_listBoxWindow.SetFont( font );
+				// Get rich edit window font
+				font.Get( ANSI_FIXED_FONT );
+
+				// Set rich edit window font
+				g_richEditWindow.SetFont( font );
+
+				// Set rich edit window to plain text mode
+				g_richEditWindow.SetTextMode( RICH_EDIT_WINDOW_CLASS_DEFAULT_PLAIN_TEXT_MODE );
 
 				// Create status bar window
 				if( g_statusBarWindow.Create( hWndMain, hInstance, STATUS_BAR_WINDOW_CLASS_DEFAULT_TEXT ) )
 				{
 					// Successfully created status bar window
 
+					// Get status bar window font
+					font.Get( DEFAULT_GUI_FONT );
+
 					// Set status bar window font
 					g_statusBarWindow.SetFont( font );
 
 				} // End of successfully created status bar window
 
-			} // End of successfully created list box window
+			} // End of successfully created rich edit window
 
 			// Break out of switch
 			break;
@@ -114,8 +120,8 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		{
 			// An activate message
 
-			// Focus on list box window
-			g_listBoxWindow.SetFocus();
+			// Focus on rich edit window
+			g_richEditWindow.SetFocus();
 
 			// Break out of switch
 			break;
@@ -128,7 +134,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			int nClientHeight;
 			RECT rcStatusBar;
 			int nStatusBarWindowHeight;
-			int nListBoxWindowHeight;
+			int nRichEditWindowHeight;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -142,10 +148,10 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 
 			// Calculate window sizes
 			nStatusBarWindowHeight	= ( rcStatusBar.bottom - rcStatusBar.top );
-			nListBoxWindowHeight	= ( nClientHeight - nStatusBarWindowHeight );
+			nRichEditWindowHeight	= ( nClientHeight - nStatusBarWindowHeight );
 
 			// Move control windows
-			g_listBoxWindow.Move( 0, 0, nClientWidth, nListBoxWindowHeight );
+			g_richEditWindow.Move( 0, 0, nClientWidth, nRichEditWindowHeight );
 
 			// Break out of switch
 			break;
@@ -211,23 +217,23 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				{
 					// Default command
 
-					// See if command message is from list box window
-					if( ( HWND )lParam == g_listBoxWindow )
+					// See if command message is from rich edit window
+					if( ( HWND )lParam == g_richEditWindow )
 					{
-						// Command message is from list box window
+						// Command message is from rich edit window
 
-						// Handle command message from list box window
-						lr = g_listBoxWindow.HandleCommandMessage( hWndMain, wParam, lParam, &ListBoxWindowSelectionChangeFunction, &ListBoxWindowDoubleClickFunction );
+						// Handle command message from rich edit window
+						lr = g_richEditWindow.HandleCommandMessage( hWndMain, wParam, lParam, &RichEditWindowSelectionChangeFunction, &RichEditWindowDoubleClickFunction );
 
-					} // End of command message is from list box window
+					} // End of command message is from rich edit window
 					else
 					{
-						// Command message is not from list box window
+						// Command message is not from rich edit window
 
 						// Call default procedure
 						lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
-					} // End of command message is not from list box window
+					} // End of command message is not from rich edit window
 
 					// Break out of switch
 					break;
