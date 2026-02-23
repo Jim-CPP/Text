@@ -191,6 +191,83 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Select command
 			switch( LOWORD( wParam ) )
 			{
+				case IDM_EDIT_UNDO:
+				{
+					// An edit undo command
+
+					// Undo
+					g_richEditWindow.Undo();
+
+					// Break out of switch
+					break;
+
+				} // End of an edit undo command
+				case IDM_EDIT_REDO:
+				{
+					// An edit redo command
+
+					// Redo
+					g_richEditWindow.Redo();
+
+					// Break out of switch
+					break;
+
+				} // End of an edit redo command
+				case IDM_EDIT_CUT:
+				{
+					// An edit cut command
+
+					// Cut
+					g_richEditWindow.Cut();
+
+					// Break out of switch
+					break;
+
+				} // End of an edit cut command
+				case IDM_EDIT_COPY:
+				{
+					// An edit copy command
+
+					// Copy
+					g_richEditWindow.Copy();
+
+					// Break out of switch
+					break;
+
+				} // End of an edit copy command
+				case IDM_EDIT_PASTE:
+				{
+					// An edit paste command
+
+					// Paste
+					g_richEditWindow.Paste();
+
+					// Break out of switch
+					break;
+
+				} // End of an edit paste command
+				case IDM_EDIT_DELETE:
+				{
+					// An edit delete command
+
+					// Delete text
+					g_richEditWindow.Delete();
+
+					// Break out of switch
+					break;
+
+				} // End of an edit delete command
+				case IDM_EDIT_SELECT_ALL:
+				{
+					// An edit select all command
+
+					// Select all text
+					g_richEditWindow.Select();
+
+					// Break out of switch
+					break;
+
+				} // End of an edit select all command
 				case IDM_FILE_EXIT:
 				{
 					// A file exit command
