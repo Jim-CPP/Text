@@ -316,7 +316,49 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		} // End of a context menu message
 		case WM_CLOSE:
 		{
-			// A c message
+			// A close message
+			File file;
+
+			// Create file
+			if( file.Create( TEXT_FILE_NAME ) )
+			{
+				// Successfully opened file
+				DWORD dwRichEditWindowTextLength;
+
+				// Get rich edit window text length
+				dwRichEditWindowTextLength = g_richEditWindow.GetTextLength();
+
+				// Ensure that rich edit window contains text
+				if( dwRichEditWindowTextLength > 0 )
+				{
+					// Rich edit window contains text
+					DWORD dwBufferLength;
+
+					// Calculate buffer length
+					dwBufferLength = ( dwRichEditWindowTextLength + sizeof( char ) );
+
+					// Allocate string memory
+					LPTSTR lpszRichEditWindowText = new char[ dwBufferLength ];
+
+					// Get rich edit window text
+					if( g_richEditWindow.GetText( lpszRichEditWindowText, dwBufferLength ) )
+					{
+						// Successfully got rich edit window text
+
+						// Write rich edit window test to file
+						file.Write( lpszRichEditWindowText, dwRichEditWindowTextLength );
+
+					} // End of successfully got rich edit window text
+
+					// Free string memory
+					delete [] lpszRichEditWindowText;
+
+				} // End of rich edit window contains text
+
+				// Close file
+				file.Close();
+
+			} // End of successfully opened file
 
 			// Destroy main window
 			DestroyWindow( hWndMain );
@@ -375,6 +417,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 			// Successfully created main window
 			Menu systemMenu;
 			ArgumentList argumentList;
+			File file;
 
 			// Get system menu
 			systemMenu = mainWindow.GetSystemMenu( FALSE );
@@ -400,6 +443,51 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 			// Update main window
 			mainWindow.Update();
+
+			// Open file
+			if( file.Open( TEXT_FILE_NAME ) )
+			{
+				// Successfully opened file
+				DWORD dwFileSize;
+				DWORD dwBufferLength;
+				LPTSTR lpszFileText;
+
+				// Get file size
+				dwFileSize = file.GetSize();
+
+				// Calculate buffer length
+				dwBufferLength = ( dwFileSize + sizeof( char ) );
+
+				// Allocate string memory
+				lpszFileText = new char[ dwBufferLength ];
+
+				// Read file text
+				if( file.Read( lpszFileText, dwFileSize ) )
+				{
+					// Successfully read file text
+
+					// Terminate file text
+					lpszFileText[ dwFileSize ] = ( char )NULL;
+
+					// Copy file text to rich edit window
+					if( g_richEditWindow.SetText( lpszFileText ) )
+					{
+						// Successfully copied file text to rich edit window
+
+						// Select text on rich edit window
+						g_richEditWindow.Select();
+
+					} // End of successfully copied file text to rich edit window
+
+				} // End of successfully read file text
+
+				// Close file
+				file.Close();
+
+				// Free string memory
+				delete [] lpszFileText;
+
+			} // End of successfully opened file
 
 			// Main message loop
 			while( message.Get() > 0 )

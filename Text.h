@@ -9,6 +9,7 @@
 
 #include "..\Classes\ArgumentListClass.h"
 #include "..\Classes\DropClass.h"
+#include "..\Classes\FileClass.h"
 #include "..\Classes\FontClass.h"
 #include "..\Classes\MenuClass.h"
 #include "..\Classes\MessageClass.h"
@@ -30,3 +31,5 @@
 																				"Written by Jim Smith\r\n"			\
 																				"\r\n"								\
 																				"February 2026"
+
+#define TEXT_FILE_NAME															"Text.txt"

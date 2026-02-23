@@ -8,6 +8,7 @@ g++ -mwindows -m64 -static -Wall -Wextra Text.cpp ^
  ^
  ..\Classes\ArgumentListClass.cpp ^
  ..\Classes\DropClass.cpp ^
+ ..\Classes\FileClass.cpp ^
  ..\Classes\FontClass.cpp ^
  ..\Classes\MenuClass.cpp ^
  ..\Classes\MessageClass.cpp ^
