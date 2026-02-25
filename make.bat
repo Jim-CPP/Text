@@ -7,6 +7,7 @@ windres Resource.rc -o Resource.o
 g++ -mwindows -m64 -static -Wall -Wextra Text.cpp ^
  ^
  ..\Classes\ArgumentListClass.cpp ^
+ ..\Classes\ClipboardClass.cpp ^
  ..\Classes\DropClass.cpp ^
  ..\Classes\FileClass.cpp ^
  ..\Classes\FontClass.cpp ^
