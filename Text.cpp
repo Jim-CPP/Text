@@ -89,6 +89,8 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 {
 	LRESULT lr = 0;
 
+	static BOOL s_bListening = FALSE;
+
 	// Select message
 	switch( uMessage )
 	{
@@ -99,6 +101,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 
 			// Get instance
 			hInstance = ( ( LPCREATESTRUCT )lParam )->hInstance;
+
+			// Add main window as a clipboard listener
+			s_bListening = ::AddClipboardFormatListener( hWndMain );
 
 			// Create rich edit window
 			if( g_richEditWindow.Create( hWndMain, hInstance, RICH_EDIT_WINDOW_CLASS_DEFAULT_TEXT ) )
@@ -329,7 +334,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 						// Command message is not from rich edit window
 
 						// Call default procedure
-						lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+						lr = ::DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
 					} // End of command message is not from rich edit window
 
@@ -367,7 +372,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 					// Default system command
 
 					// Call default procedure
-					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+					lr = ::DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
 					// Break out of switch
 					break;
@@ -402,17 +407,32 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				// Notify message is not from rich edit window
 
 				// Call default procedure
-				lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+				lr = ::DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
 			} // End of notify message is not from rich edit window
 
 			// Call default procedure
-			lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+			lr = ::DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
 			// Break out of switch
 			break;
 
 		} // End of a notify message
+		case WM_CLIPBOARDUPDATE:
+		{
+			// A clipboard update message
+			BOOL bDoesClipboardContainText;
+
+			// See if clipboard contains text
+			bDoesClipboardContainText = ::IsClipboardFormatAvailable( CF_TEXT );
+
+			// Update paste menu item accordingly
+			g_contextMenu.EnableItem( IDM_EDIT_PASTE, bDoesClipboardContainText );
+
+			// Break out of switch
+			break;
+
+		} // End of a clipboard update message
 		case WM_CONTEXTMENU:
 		{
 			// A context menu message
@@ -481,6 +501,19 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		{
 			// A destroy message
 
+			// See if main window is listening to clipboard
+			if( s_bListening )
+			{
+				// Main window is listening to clipboard
+
+				// Remove main window from clipboard listeners
+				::RemoveClipboardFormatListener( hWndMain );
+
+				// Reset listening value
+				s_bListening = FALSE;
+
+			} // End of main window is listening to clipboard
+
 			// Terminate thread
 			PostQuitMessage( 0 );
 
@@ -493,7 +526,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Default message
 
 			// Call default handler
-			lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+			lr = ::DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
 			// Break out of switch
 			break;
