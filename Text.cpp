@@ -5,8 +5,26 @@
 #include <windows.h>
 
 // Global variables
+static Menu g_contextMenu;
 static RichEditWindow g_richEditWindow;
 static StatusBarWindow g_statusBarWindow;
+
+void RichEditWindowUpdateFunction( BOOL bCanUndo, BOOL bCanRedo )
+{
+	// Update menu items accordingly
+	g_contextMenu.EnableItem( IDM_EDIT_UNDO, bCanUndo );
+	g_contextMenu.EnableItem( IDM_EDIT_REDO, bCanRedo );
+
+} // End of function RichEditWindowUpdateFunction
+
+void RichEditWindowSelectionChangedFunction( BOOL bIsTextSelected )
+{
+	// Update menu items accordingly
+	g_contextMenu.EnableItem( IDM_EDIT_CUT,		bIsTextSelected );
+	g_contextMenu.EnableItem( IDM_EDIT_COPY,	bIsTextSelected );
+	g_contextMenu.EnableItem( IDM_EDIT_DELETE,	bIsTextSelected );
+
+} // End of function RichEditWindowSelectionChangedFunction
 
 BOOL RichEditWindowSelectionChangeFunction( LPCTSTR lpszSelectedItemText )
 {
@@ -96,6 +114,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 
 				// Set rich edit window to plain text mode
 				g_richEditWindow.SetTextMode( RICH_EDIT_WINDOW_CLASS_DEFAULT_PLAIN_TEXT_MODE );
+
+				// Set rich edit window event mask to default
+				g_richEditWindow.SetEventMask();
 
 				// Create status bar window
 				if( g_statusBarWindow.Create( hWndMain, hInstance, STATUS_BAR_WINDOW_CLASS_DEFAULT_TEXT ) )
@@ -300,7 +321,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 						// Command message is from rich edit window
 
 						// Handle command message from rich edit window
-						lr = g_richEditWindow.HandleCommandMessage( hWndMain, wParam, lParam, &RichEditWindowSelectionChangeFunction, &RichEditWindowDoubleClickFunction );
+						lr = g_richEditWindow.HandleCommandMessage( hWndMain, wParam, lParam, &RichEditWindowUpdateFunction );
 
 					} // End of command message is from rich edit window
 					else
@@ -367,7 +388,23 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Get notify message handler
 			lpNmHdr = ( LPNMHDR )lParam;
 
-			// Source window is lpNmHdr->hwndFrom
+			// See if notify message is from rich edit window
+			if( lpNmHdr->hwndFrom == g_richEditWindow )
+			{
+				// Notify message is from rich edit window
+
+				// Handle message from rich edit window
+				lr = g_richEditWindow.HandleNotifyMessage( hWndMain, wParam, lParam, &RichEditWindowSelectionChangedFunction );
+
+			} // End of notify message is from rich edit window
+			else
+			{
+				// Notify message is not from rich edit window
+
+				// Call default procedure
+				lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+			} // End of notify message is not from rich edit window
 
 			// Call default procedure
 			lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
@@ -379,13 +416,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		case WM_CONTEXTMENU:
 		{
 			// A context menu message
-			Menu contextMenu;
-
-			// Load context menu
-			contextMenu.Load( MAKEINTRESOURCE( IDR_CONTEXT_MENU ) );
 
 			// Show context menu
-			contextMenu.TrackPopupMenu( 0, hWndMain, lParam );
+			g_contextMenu.TrackPopupMenu( 0, hWndMain, lParam );
 
 			// Break out of switch
 			break;
@@ -504,6 +537,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 			// Add about item to system menu
 			systemMenu.InsertItem( MENU_CLASS_SYSTEM_MENU_ABOUT_ITEM_POSITION, MENU_CLASS_SYSTEM_MENU_ABOUT_ITEM_TEXT, IDM_HELP_ABOUT );
+
+			// Load context menu
+			g_contextMenu.Load( MAKEINTRESOURCE( IDR_CONTEXT_MENU ) );
 
 			// Get argument list
 			if( argumentList.Get() )
