@@ -19,5 +19,6 @@ g++ -mwindows -m64 -static -Wall -Wextra Text.cpp ^
  ^
  ..\Classes\RichEditWindowClass.cpp ^
  ..\Classes\StatusBarWindowClass.cpp ^
+ ..\Classes\ToolBarWindowClass.cpp ^
  ^
- Resource.o -o Text.exe
+ Resource.o -o Text.exe -lcomctl32

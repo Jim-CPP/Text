@@ -19,6 +19,7 @@
 
 #include "..\Classes\RichEditWindowClass.h"
 #include "..\Classes\StatusBarWindowClass.h"
+#include "..\Classes\ToolBarWindowClass.h"
 
 #include "Resource.h"
 

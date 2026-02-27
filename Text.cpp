@@ -8,12 +8,17 @@
 static Menu g_contextMenu;
 static RichEditWindow g_richEditWindow;
 static StatusBarWindow g_statusBarWindow;
+static ToolBarWindow g_toolBarWindow;
 
 void RichEditWindowUpdateFunction( BOOL bCanUndo, BOOL bCanRedo )
 {
 	// Update menu items accordingly
 	g_contextMenu.EnableItem( IDM_EDIT_UNDO, bCanUndo );
 	g_contextMenu.EnableItem( IDM_EDIT_REDO, bCanRedo );
+
+	// Update tool-bar buttons accordingly
+	g_toolBarWindow.EnableButton( IDM_EDIT_UNDO, bCanUndo );
+	g_toolBarWindow.EnableButton( IDM_EDIT_REDO, bCanRedo );
 
 } // End of function RichEditWindowUpdateFunction
 
@@ -23,6 +28,11 @@ void RichEditWindowSelectionChangedFunction( BOOL bIsTextSelected )
 	g_contextMenu.EnableItem( IDM_EDIT_CUT,		bIsTextSelected );
 	g_contextMenu.EnableItem( IDM_EDIT_COPY,	bIsTextSelected );
 	g_contextMenu.EnableItem( IDM_EDIT_DELETE,	bIsTextSelected );
+
+	// Update tool-bar buttons accordingly
+	g_toolBarWindow.EnableButton( IDM_EDIT_CUT,		bIsTextSelected );
+	g_toolBarWindow.EnableButton( IDM_EDIT_COPY,	bIsTextSelected );
+	g_toolBarWindow.EnableButton( IDM_EDIT_DELETE,	bIsTextSelected );
 
 } // End of function RichEditWindowSelectionChangedFunction
 
@@ -105,38 +115,54 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Add main window as a clipboard listener
 			s_bListening = ::AddClipboardFormatListener( hWndMain );
 
-			// Create rich edit window
-			if( g_richEditWindow.Create( hWndMain, hInstance, RICH_EDIT_WINDOW_CLASS_DEFAULT_TEXT ) )
+			// Initialise tool-bar window buttons
+			g_toolBarWindow.AddButton( STD_UNDO,	IDM_EDIT_UNDO );
+			g_toolBarWindow.AddButton( STD_REDOW,	IDM_EDIT_REDO );
+			g_toolBarWindow.AddButton( STD_CUT,		IDM_EDIT_CUT );
+			g_toolBarWindow.AddButton( STD_COPY,	IDM_EDIT_COPY );
+			g_toolBarWindow.AddButton( STD_PASTE,	IDM_EDIT_PASTE );
+			g_toolBarWindow.AddButton( STD_DELETE,	IDM_EDIT_DELETE );
+			g_toolBarWindow.AddButton( STD_HELP,	IDM_HELP_ABOUT );
+
+			// Create tool-bar window
+			if( g_toolBarWindow.Create( hWndMain, hInstance ) )
 			{
-				// Successfully created rich edit window
-				Font font;
+				// Successfully created tool-bar window
 
-				// Get rich edit window font
-				font.Get( ANSI_FIXED_FONT );
-
-				// Set rich edit window font
-				g_richEditWindow.SetFont( font );
-
-				// Set rich edit window to plain text mode
-				g_richEditWindow.SetTextMode( RICH_EDIT_WINDOW_CLASS_DEFAULT_PLAIN_TEXT_MODE );
-
-				// Set rich edit window event mask to default
-				g_richEditWindow.SetEventMask();
-
-				// Create status bar window
-				if( g_statusBarWindow.Create( hWndMain, hInstance, STATUS_BAR_WINDOW_CLASS_DEFAULT_TEXT ) )
+				// Create rich edit window
+				if( g_richEditWindow.Create( hWndMain, hInstance, RICH_EDIT_WINDOW_CLASS_DEFAULT_TEXT ) )
 				{
-					// Successfully created status bar window
+					// Successfully created rich edit window
+					Font font;
 
-					// Get status bar window font
-					font.Get( DEFAULT_GUI_FONT );
+					// Get rich edit window font
+					font.Get( ANSI_FIXED_FONT );
 
-					// Set status bar window font
-					g_statusBarWindow.SetFont( font );
+					// Set rich edit window font
+					g_richEditWindow.SetFont( font );
 
-				} // End of successfully created status bar window
+					// Set rich edit window to plain text mode
+					g_richEditWindow.SetTextMode( RICH_EDIT_WINDOW_CLASS_DEFAULT_PLAIN_TEXT_MODE );
 
-			} // End of successfully created rich edit window
+					// Set rich edit window event mask to default
+					g_richEditWindow.SetEventMask();
+
+					// Create status bar window
+					if( g_statusBarWindow.Create( hWndMain, hInstance, STATUS_BAR_WINDOW_CLASS_DEFAULT_TEXT ) )
+					{
+						// Successfully created status bar window
+
+						// Get status bar window font
+						font.Get( DEFAULT_GUI_FONT );
+
+						// Set status bar window font
+						g_statusBarWindow.SetFont( font );
+
+					} // End of successfully created status bar window
+
+				} // End of successfully created rich edit window
+
+			} // End of successfully created tool-bar window
 
 			// Break out of switch
 			break;
@@ -159,8 +185,11 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			int nClientWidth;
 			int nClientHeight;
 			RECT rcStatusBar;
+			RECT rcToolBar;
 			int nStatusBarWindowHeight;
+			int nToolBarWindowHeight;
 			int nRichEditWindowHeight;
+			int nRichEditWindowTop;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -172,12 +201,19 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Get status bar window size
 			g_statusBarWindow.GetWindowRect( &rcStatusBar );
 
+			// Get tool bar window size
+			g_toolBarWindow.GetWindowRect( &rcToolBar );
+
 			// Calculate window sizes
+			nToolBarWindowHeight	= ( rcToolBar.bottom - rcToolBar.top );
 			nStatusBarWindowHeight	= ( rcStatusBar.bottom - rcStatusBar.top );
-			nRichEditWindowHeight	= ( nClientHeight - nStatusBarWindowHeight );
+			nRichEditWindowHeight	= ( nClientHeight - ( nToolBarWindowHeight + nStatusBarWindowHeight ) );
+
+			// Calculate window positions
+			nRichEditWindowTop		= nToolBarWindowHeight;
 
 			// Move control windows
-			g_richEditWindow.Move( 0, 0, nClientWidth, nRichEditWindowHeight );
+			g_richEditWindow.Move( 0, nRichEditWindowTop, nClientWidth, nRichEditWindowHeight );
 
 			// Break out of switch
 			break;
@@ -428,6 +464,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 
 			// Update paste menu item accordingly
 			g_contextMenu.EnableItem( IDM_EDIT_PASTE, bDoesClipboardContainText );
+
+			// Update paste tool-bar button accordingly
+			g_toolBarWindow.EnableButton( IDM_EDIT_PASTE, bDoesClipboardContainText );
 
 			// Break out of switch
 			break;
