@@ -118,10 +118,13 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Initialise tool-bar window buttons
 			g_toolBarWindow.AddButton( STD_UNDO,	IDM_EDIT_UNDO );
 			g_toolBarWindow.AddButton( STD_REDOW,	IDM_EDIT_REDO );
+			g_toolBarWindow.AddSeparator();
 			g_toolBarWindow.AddButton( STD_CUT,		IDM_EDIT_CUT );
 			g_toolBarWindow.AddButton( STD_COPY,	IDM_EDIT_COPY );
 			g_toolBarWindow.AddButton( STD_PASTE,	IDM_EDIT_PASTE );
+			g_toolBarWindow.AddSeparator();
 			g_toolBarWindow.AddButton( STD_DELETE,	IDM_EDIT_DELETE );
+			g_toolBarWindow.AddSeparator();
 			g_toolBarWindow.AddButton( STD_HELP,	IDM_HELP_ABOUT );
 
 			// Create tool-bar window
