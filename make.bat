@@ -14,6 +14,7 @@ g++ -mwindows -m64 -static -Wall -Wextra Text.cpp ^
  ..\Classes\MenuClass.cpp ^
  ..\Classes\MessageClass.cpp ^
  ..\Classes\MinMaxInfoClass.cpp ^
+ ..\Classes\OpenFileNameClass.cpp ^
  ..\Classes\WindowClass.cpp ^
  ..\Classes\WindowClassClass.cpp ^
  ^

@@ -24,6 +24,10 @@ IDR_MAIN_MENU MENU
 BEGIN
 	POPUP "&File"
 	BEGIN
+		MENUITEM "New",															IDM_FILE_NEW
+		MENUITEM "Load",														IDM_FILE_LOAD
+		MENUITEM "Save",														IDM_FILE_SAVE
+		MENUITEM SEPARATOR
 		MENUITEM "E&xit",														IDM_FILE_EXIT
 	END
 	POPUP "&Edit"

@@ -9,6 +9,148 @@ static Menu g_contextMenu;
 static RichEditWindow g_richEditWindow;
 static StatusBarWindow g_statusBarWindow;
 static ToolBarWindow g_toolBarWindow;
+static LPTSTR g_lpszFileName;
+
+void ClearText()
+{
+	// Clear text
+	g_richEditWindow.Delete();
+
+	// Clear rich edit window modified flag
+	g_richEditWindow.ClearModifiedFlag();
+
+	// Clear global file name
+	g_lpszFileName[ 0 ] = ( char )NULL;
+
+} // End of function ClearText
+
+BOOL LoadText( LPCTSTR lpszFileName )
+{
+	BOOL bResult = FALSE;
+
+	File file;
+
+	// Open file
+	if( file.Open( lpszFileName ) )
+	{
+		// Successfully opened file
+		DWORD dwFileSize;
+		DWORD dwBufferLength;
+		LPTSTR lpszFileText;
+
+		// Get file size
+		dwFileSize = file.GetSize();
+
+		// Calculate buffer length
+		dwBufferLength = ( dwFileSize + sizeof( char ) );
+
+		// Allocate string memory
+		lpszFileText = new char[ dwBufferLength ];
+
+		// Read file text
+		if( file.Read( lpszFileText, dwFileSize ) )
+		{
+			// Successfully read file text
+
+			// Terminate file text
+			lpszFileText[ dwFileSize ] = ( char )NULL;
+
+			// Copy file text to rich edit window
+			if( g_richEditWindow.SetText( lpszFileText ) )
+			{
+				// Successfully copied file text to rich edit window
+
+				// Select text on rich edit window
+				g_richEditWindow.Select();
+
+				// Clear rich edit window modified flag
+				g_richEditWindow.ClearModifiedFlag();
+
+				// Update global file name
+				lstrcpy( g_lpszFileName, lpszFileName );
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully copied file text to rich edit window
+
+		} // End of successfully read file text
+
+		// Close file
+		file.Close();
+
+		// Free string memory
+		delete [] lpszFileText;
+
+	} // End of successfully opened file
+
+	return bResult;
+
+} // End of function LoadText
+
+BOOL SaveText( LPCTSTR lpszFileName )
+{
+	BOOL bResult = FALSE;
+
+	File file;
+
+	// Create file
+	if( file.Create( lpszFileName ) )
+	{
+		// Successfully opened file
+		DWORD dwRichEditWindowTextLength;
+
+		// Get rich edit window text length
+		dwRichEditWindowTextLength = g_richEditWindow.GetTextLength();
+
+		// Ensure that rich edit window contains text
+		if( dwRichEditWindowTextLength > 0 )
+		{
+			// Rich edit window contains text
+			DWORD dwBufferLength;
+
+			// Calculate buffer length
+			dwBufferLength = ( dwRichEditWindowTextLength + sizeof( char ) );
+
+			// Allocate string memory
+			LPTSTR lpszRichEditWindowText = new char[ dwBufferLength ];
+
+			// Get rich edit window text
+			if( g_richEditWindow.GetText( lpszRichEditWindowText, dwBufferLength ) )
+			{
+				// Successfully got rich edit window text
+
+				// Write rich edit window text to file
+				if( file.Write( lpszRichEditWindowText, dwRichEditWindowTextLength ) )
+				{
+					// Successfully wrote rich edit window text to file
+
+					// Clear rich edit window modified flag
+					g_richEditWindow.ClearModifiedFlag();
+
+					// Update global file name
+					lstrcpy( g_lpszFileName, lpszFileName );
+
+					// Update return value
+					bResult = TRUE;
+
+				} // End of successfully wrote rich edit window text to file
+
+			} // End of successfully got rich edit window text
+
+			// Free string memory
+			delete [] lpszRichEditWindowText;
+
+		} // End of rich edit window contains text
+
+		// Close file
+		file.Close();
+
+	} // End of successfully opened file
+
+	return bResult;
+
+} // End of function SaveText
 
 void RichEditWindowUpdateFunction( BOOL bCanUndo, BOOL bCanRedo )
 {
@@ -116,16 +258,20 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			s_bListening = ::AddClipboardFormatListener( hWndMain );
 
 			// Initialise tool-bar window buttons
-			g_toolBarWindow.AddButton( STD_UNDO,	IDM_EDIT_UNDO );
-			g_toolBarWindow.AddButton( STD_REDOW,	IDM_EDIT_REDO );
+			g_toolBarWindow.AddButton( STD_FILENEW,		IDM_FILE_NEW );
+			g_toolBarWindow.AddButton( STD_FILEOPEN,	IDM_FILE_LOAD );
+			g_toolBarWindow.AddButton( STD_FILESAVE,	IDM_FILE_SAVE );
 			g_toolBarWindow.AddSeparator();
-			g_toolBarWindow.AddButton( STD_CUT,		IDM_EDIT_CUT );
-			g_toolBarWindow.AddButton( STD_COPY,	IDM_EDIT_COPY );
-			g_toolBarWindow.AddButton( STD_PASTE,	IDM_EDIT_PASTE );
+			g_toolBarWindow.AddButton( STD_UNDO,		IDM_EDIT_UNDO );
+			g_toolBarWindow.AddButton( STD_REDOW,		IDM_EDIT_REDO );
 			g_toolBarWindow.AddSeparator();
-			g_toolBarWindow.AddButton( STD_DELETE,	IDM_EDIT_DELETE );
+			g_toolBarWindow.AddButton( STD_CUT,			IDM_EDIT_CUT );
+			g_toolBarWindow.AddButton( STD_COPY,		IDM_EDIT_COPY );
+			g_toolBarWindow.AddButton( STD_PASTE,		IDM_EDIT_PASTE );
 			g_toolBarWindow.AddSeparator();
-			g_toolBarWindow.AddButton( STD_HELP,	IDM_HELP_ABOUT );
+			g_toolBarWindow.AddButton( STD_DELETE,		IDM_EDIT_DELETE );
+			g_toolBarWindow.AddSeparator();
+			g_toolBarWindow.AddButton( STD_HELP,		IDM_HELP_ABOUT );
 
 			// Create tool-bar window
 			if( g_toolBarWindow.Create( hWndMain, hInstance ) )
@@ -256,6 +402,50 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Select command
 			switch( LOWORD( wParam ) )
 			{
+				case IDM_FILE_NEW:
+				{
+					// A file new command
+
+					//
+					MessageBox( hWndMain, "new", "", MB_OK );
+
+					// Break out of switch
+					break;
+
+				} // End of a file new command
+				case IDM_FILE_LOAD:
+				{
+					// A file load command
+
+					//
+					MessageBox( hWndMain, "load", "", MB_OK );
+
+					// Break out of switch
+					break;
+
+				} // End of a file load command
+				case IDM_FILE_SAVE:
+				{
+					// A file save command
+
+					//
+					MessageBox( hWndMain, "save", "", MB_OK );
+
+					// Break out of switch
+					break;
+
+				} // End of a file save command
+				case IDM_FILE_EXIT:
+				{
+					// A file exit command
+
+					// Destroy main window
+					DestroyWindow( hWndMain );
+
+					// Break out of switch
+					break;
+
+				} // End of a file exit command
 				case IDM_EDIT_UNDO:
 				{
 					// An edit undo command
@@ -333,17 +523,6 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 					break;
 
 				} // End of an edit select all command
-				case IDM_FILE_EXIT:
-				{
-					// A file exit command
-
-					// Destroy main window
-					DestroyWindow( hWndMain );
-
-					// Break out of switch
-					break;
-
-				} // End of a file exit command
 				case IDM_HELP_ABOUT:
 				{
 					// A help about command
@@ -489,48 +668,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		case WM_CLOSE:
 		{
 			// A close message
-			File file;
 
-			// Create file
-			if( file.Create( TEXT_FILE_NAME ) )
-			{
-				// Successfully opened file
-				DWORD dwRichEditWindowTextLength;
-
-				// Get rich edit window text length
-				dwRichEditWindowTextLength = g_richEditWindow.GetTextLength();
-
-				// Ensure that rich edit window contains text
-				if( dwRichEditWindowTextLength > 0 )
-				{
-					// Rich edit window contains text
-					DWORD dwBufferLength;
-
-					// Calculate buffer length
-					dwBufferLength = ( dwRichEditWindowTextLength + sizeof( char ) );
-
-					// Allocate string memory
-					LPTSTR lpszRichEditWindowText = new char[ dwBufferLength ];
-
-					// Get rich edit window text
-					if( g_richEditWindow.GetText( lpszRichEditWindowText, dwBufferLength ) )
-					{
-						// Successfully got rich edit window text
-
-						// Write rich edit window test to file
-						file.Write( lpszRichEditWindowText, dwRichEditWindowTextLength );
-
-					} // End of successfully got rich edit window text
-
-					// Free string memory
-					delete [] lpszRichEditWindowText;
-
-				} // End of rich edit window contains text
-
-				// Close file
-				file.Close();
-
-			} // End of successfully opened file
+			// Save text
+			SaveText( TEXT_FILE_NAME );
 
 			// Destroy main window
 			DestroyWindow( hWndMain );
@@ -587,6 +727,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 	WindowClass mainWindowClass;
 
+	// Allocate global string memory
+	g_lpszFileName = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Clear global file name
+	g_lpszFileName[ 0 ] = ( char )NULL;
+
 	// Initialise main window class
 	mainWindowClass.Init( MAIN_WINDOW_CLASS_NAME, MainWindowProcedure, hInstance );
 
@@ -632,50 +778,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 			// Update main window
 			mainWindow.Update();
 
-			// Open file
-			if( file.Open( TEXT_FILE_NAME ) )
-			{
-				// Successfully opened file
-				DWORD dwFileSize;
-				DWORD dwBufferLength;
-				LPTSTR lpszFileText;
-
-				// Get file size
-				dwFileSize = file.GetSize();
-
-				// Calculate buffer length
-				dwBufferLength = ( dwFileSize + sizeof( char ) );
-
-				// Allocate string memory
-				lpszFileText = new char[ dwBufferLength ];
-
-				// Read file text
-				if( file.Read( lpszFileText, dwFileSize ) )
-				{
-					// Successfully read file text
-
-					// Terminate file text
-					lpszFileText[ dwFileSize ] = ( char )NULL;
-
-					// Copy file text to rich edit window
-					if( g_richEditWindow.SetText( lpszFileText ) )
-					{
-						// Successfully copied file text to rich edit window
-
-						// Select text on rich edit window
-						g_richEditWindow.Select();
-
-					} // End of successfully copied file text to rich edit window
-
-				} // End of successfully read file text
-
-				// Close file
-				file.Close();
-
-				// Free string memory
-				delete [] lpszFileText;
-
-			} // End of successfully opened file
+			// Load text
+			LoadText( TEXT_FILE_NAME );
 
 			// Main message loop
 			while( message.Get() > 0 )
@@ -707,6 +811,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 		MessageBox( NULL, WINDOW_CLASS_CLASS_UNABLE_TO_REGISTER_WINDOW_CLASS_ERROR_MESSAGE, ERROR_MESSAGE_CAPTION, ( MB_OK | MB_ICONERROR ) );
 
 	} // End of unable to register main window class
+
+	// Free global string memory
+	delete [] g_lpszFileName;
 
 	return message;
 

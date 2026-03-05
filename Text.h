@@ -14,6 +14,7 @@
 #include "..\Classes\MenuClass.h"
 #include "..\Classes\MessageClass.h"
 #include "..\Classes\MinMaxInfoClass.h"
+#include "..\Classes\OpenFileNameClass.h"
 #include "..\Classes\WindowClass.h"
 #include "..\Classes\WindowClassClass.h"
 
